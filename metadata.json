@@ -1,0 +1,6 @@
+{
+  "name": "SR Tech Garment Software",
+  "description": "SR Tech Garment Software - Professional Garment & Textile Manufacturing Application",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
