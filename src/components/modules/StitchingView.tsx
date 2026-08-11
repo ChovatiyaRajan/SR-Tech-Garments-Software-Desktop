@@ -7,6 +7,7 @@ import { DataTable, Column } from '../common/DataTable';
 import { Drawer } from '../common/Drawer';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField, SelectField } from '../common/FormControls';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface StitchingViewProps {
   showToast: (msg: string) => void;
@@ -38,6 +39,31 @@ export const StitchingView: React.FC<StitchingViewProps> = ({ showToast, onViewL
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<Stitching | null>(null);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      const avail = activeAssignments.length > 0 ? activeAssignments[0] : null;
+      if (avail) {
+        const rem = getAssignmentRemaining(avail);
+        setFormData({
+          tailorAssignmentId: avail.id,
+          stitchedGoodPiecesQty: String(rem > 0 ? rem : 100),
+          defectivePiecesQty: '0',
+          ratePerPiece: String(avail.ratePerPiece || 45),
+          stitchingDate: new Date().toISOString().split('T')[0],
+          notes: 'Standard stitching batch inspection'
+        });
+        setError('');
+        setIsDrawerOpen(true);
+      } else {
+        showToast('No active tailor assignments available for stitching receipt.');
+      }
+    },
+    onClose: () => {
+      setIsDrawerOpen(false);
+      setViewRecord(null);
+    }
+  });
 
   const [formData, setFormData] = useState({
     tailorAssignmentId: '',
@@ -201,14 +227,14 @@ export const StitchingView: React.FC<StitchingViewProps> = ({ showToast, onViewL
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
-        title="Stitching Completion & Wages"
-        description="Record stitched garments received from tailors, track pending piece balances, calculate wages, and update Finished Goods inventory."
+        title="STITCHING COMPLETION & TAILOR WAGES LOG"
+        description="Record stitched garments returned by tailors, track pending piece balances, calculate tailor wages, and update Finished Goods inventory."
         primaryAction={{
-          label: "Record Stitching Output",
+          label: "Record Stitching Completion (F2)",
           onClick: () => handleOpenNew(),
-          icon: <Plus className="w-4 h-4" />
+          icon: <Plus className="w-3.5 h-3.5" />
         }}
       />
 

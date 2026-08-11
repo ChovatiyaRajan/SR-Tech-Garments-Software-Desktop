@@ -8,6 +8,7 @@ import { Drawer } from '../common/Drawer';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField, SelectField } from '../common/FormControls';
 import { StatusBadge } from '../common/StatusBadge';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface SalaryViewProps {
   showToast: (msg: string) => void;
@@ -29,6 +30,27 @@ export const SalaryView: React.FC<SalaryViewProps> = ({ showToast }) => {
   const [selectedSalary, setSelectedSalary] = useState<SalaryRecord | null>(null);
   const [viewRecordSal, setViewRecordSal] = useState<SalaryRecord | null>(null);
   const [viewRecordUpaad, setViewRecordUpaad] = useState<UpaadRecord | null>(null);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      setUpaadForm({
+        employeeId: employees.length > 0 ? employees[0].id : '',
+        amount: '2000',
+        date: new Date().toISOString().split('T')[0],
+        reason: 'Emergency advance',
+        paymentMethod: 'UPI',
+        referenceNumber: `TXN-${Math.floor(100000 + Math.random() * 900000)}`
+      });
+      setUpaadModalOpen(true);
+    },
+    onClose: () => {
+      setUpaadModalOpen(false);
+      setGenerateSalaryOpen(false);
+      setPaymentModalOpen(false);
+      setViewRecordSal(null);
+      setViewRecordUpaad(null);
+    }
+  });
 
   // Forms State
   const [upaadForm, setUpaadForm] = useState({
@@ -304,20 +326,20 @@ export const SalaryView: React.FC<SalaryViewProps> = ({ showToast }) => {
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Employee Salary & Upaad Ledger"
-        description="Employee workflow: Base Monthly Salary - Upaad Advances = Net Salary Payment."
+        title="EMPLOYEE SALARY & UPAAD (ADVANCE) LEDGER"
+        description="Employee workflow: Base Monthly Salary - Upaad Advances = Net Salary Disbursement."
         primaryAction={{
-          label: "Add Upaad / Advance",
+          label: "Issue Upaad / Advance (F2)",
           onClick: handleOpenUpaad,
-          icon: <Plus className="w-4 h-4" />
+          icon: <Plus className="w-3.5 h-3.5" />
         }}
         secondaryActions={[
           {
-            label: "Generate Monthly Salary",
+            label: "Calculate Monthly Salary",
             onClick: handleOpenGenSalary,
-            icon: <FileText className="w-4 h-4" />
+            icon: <FileText className="w-3.5 h-3.5" />
           }
         ]}
       />

@@ -7,6 +7,7 @@ import { DataTable, Column } from '../common/DataTable';
 import { Drawer } from '../common/Drawer';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField } from '../common/FormControls';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface TailorsViewProps {
   showToast: (msg: string) => void;
@@ -17,6 +18,18 @@ export const TailorsView: React.FC<TailorsViewProps> = ({ showToast, onViewLot }
   const [tailors, setTailors] = useState<Tailor[]>(erpService.getTailors());
   const [selectedTailor, setSelectedTailor] = useState<Tailor | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      setFormData({ name: '', phone: '', specialization: 'Shirt & Kurti Stitching', ratePerPiece: '45' });
+      setError('');
+      setIsDrawerOpen(true);
+    },
+    onClose: () => {
+      setIsDrawerOpen(false);
+      setSelectedTailor(null);
+    }
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -97,14 +110,14 @@ export const TailorsView: React.FC<TailorsViewProps> = ({ showToast, onViewLot }
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Tailors Master"
+        title="TAILORS MASTER DIRECTORY"
         description="Directory of tailoring contractors, stitching piece rates, and assigned lots."
         primaryAction={{
-          label: "Add Tailor",
+          label: "Add Tailor Master (F2)",
           onClick: handleOpenAdd,
-          icon: <Plus className="w-4 h-4" />
+          icon: <Plus className="w-3.5 h-3.5" />
         }}
       />
 

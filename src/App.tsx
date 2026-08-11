@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ERPLayout, NavModule } from './components/common/ERPLayout';
 import { Toast } from './components/common/Toast';
 import { authService, AuthUser } from './services/auth';
+import { enterFullscreen, exitFullscreen } from './utils/fullscreen';
 import { LoginView } from './components/modules/LoginView';
 
 import { DashboardView } from './components/modules/DashboardView';
@@ -89,9 +90,11 @@ export default function App() {
     setIsAuthenticated(true);
     window.location.hash = 'dashboard';
     setActiveModule('dashboard');
+    enterFullscreen();
   };
 
   const handleLogout = () => {
+    exitFullscreen();
     authService.logout();
     setIsAuthenticated(false);
     setCurrentUser(null);

@@ -21,6 +21,8 @@ import { PageHeader } from '../common/PageHeader';
 import { ProcessTracker, getActiveModuleForStatus } from '../common/ProcessTracker';
 import { StatusBadge } from '../common/StatusBadge';
 import { NavModule } from '../common/ERPLayout';
+import { printLotSummaryHtml } from '../../utils/printHelper';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface LotDetailViewProps {
   lotNumber: string;
@@ -30,6 +32,15 @@ interface LotDetailViewProps {
 
 export const LotDetailView: React.FC<LotDetailViewProps> = ({ lotNumber, onBack, onNavigate }) => {
   const lifecycle = erpService.getLotLifecycle(lotNumber);
+
+  useKeyboardShortcuts({
+    onClose: onBack,
+    onPrint: () => {
+      if (lifecycle) {
+        printLotSummaryHtml(lifecycle);
+      }
+    }
+  });
 
   if (!lifecycle || !lifecycle.purchase) {
     return (
@@ -78,8 +89,8 @@ export const LotDetailView: React.FC<LotDetailViewProps> = ({ lotNumber, onBack,
       </div>
 
       <PageHeader
-        title={`Lot Lifecycle Audit: ${lotNumber}`}
-        description={`Challan: ${purchase.challanNumber} • Wholesaler: ${purchase.wholesalerName} • Purchased: ${purchase.totalQuantity} ${purchase.unit}`}
+        title={`LOT AUDIT & LIFECYCLE: ${lotNumber}`}
+        description={`Challan: ${purchase.challanNumber} • Wholesaler: ${purchase.wholesalerName} • Quantity: ${purchase.totalQuantity} ${purchase.unit}`}
       />
 
       {/* Visual Workflow Progress Tracker */}

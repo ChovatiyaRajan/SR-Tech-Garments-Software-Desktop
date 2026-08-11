@@ -7,6 +7,7 @@ import { DataTable, Column } from '../common/DataTable';
 import { Drawer } from '../common/Drawer';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField } from '../common/FormControls';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface EmployeesViewProps {
   showToast: (msg: string) => void;
@@ -19,6 +20,33 @@ export const EmployeesView: React.FC<EmployeesViewProps> = ({ showToast, onViewL
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      setEditingEmployee(null);
+      setFormData({
+        name: '',
+        phone: '',
+        designation: 'Sales & Dispatch Manager',
+        baseSalary: '25000',
+        joiningDate: new Date().toISOString().split('T')[0],
+        bankName: 'State Bank of India',
+        accountNumber: '',
+        ifscCode: 'SBIN0001020',
+        accountHolderName: '',
+        upiId: ''
+      });
+      setError('');
+      setIsDrawerOpen(true);
+    },
+    onClose: () => {
+      setIsDrawerOpen(false);
+      setSelectedEmp(null);
+      setEditingEmployee(null);
+      setDeletingEmployee(null);
+      setQrModalEmp(null);
+    }
+  });
 
   // QR Modal State
   const [qrModalEmp, setQrModalEmp] = useState<Employee | null>(null);
@@ -229,14 +257,14 @@ export const EmployeesView: React.FC<EmployeesViewProps> = ({ showToast, onViewL
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Employees Master"
-        description="Staff directory, designations, bank accounts, UPI payment QR details, and monthly base salaries."
+        title="EMPLOYEES MASTER DIRECTORY"
+        description="Staff directory, designations, bank accounts, UPI payment details, and monthly base salaries."
         primaryAction={{
-          label: "Add Employee",
+          label: "Add Employee (F2)",
           onClick: handleOpenAdd,
-          icon: <Plus className="w-4 h-4" />
+          icon: <Plus className="w-3.5 h-3.5" />
         }}
       />
 

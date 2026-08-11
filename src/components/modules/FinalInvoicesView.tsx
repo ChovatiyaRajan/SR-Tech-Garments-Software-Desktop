@@ -9,6 +9,7 @@ import { Modal } from '../common/Modal';
 import { FormSection, InputField, SelectField } from '../common/FormControls';
 import { StatusBadge } from '../common/StatusBadge';
 import { printInvoiceHtml } from '../../utils/printHelper';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface FinalInvoicesViewProps {
   showToast: (msg: string) => void;
@@ -175,6 +176,29 @@ export const FinalInvoicesView: React.FC<FinalInvoicesViewProps> = ({
     setIsDrawerOpen(true);
   };
 
+  useKeyboardShortcuts({
+    onNew: handleOpenNew,
+    onPrint: () => {
+      if (selectedInvoice) {
+        printInvoiceHtml(selectedInvoice);
+      } else if (invoices.length > 0) {
+        printInvoiceHtml(invoices[0]);
+      }
+    },
+    onPayment: () => {
+      if (selectedInvoice) {
+        handleOpenPaymentModal(selectedInvoice);
+      } else if (invoices.length > 0) {
+        handleOpenPaymentModal(invoices[0]);
+      }
+    },
+    onClose: () => {
+      setIsDrawerOpen(false);
+      setPaymentModalOpen(false);
+      setSelectedInvoice(null);
+    }
+  });
+
   const handleLotChange = (lotNum: string) => {
     const foundLot = availableLots.find(l => l.lotNumber === lotNum);
     const fp = finishedProducts.find(f => f.lotNumber === lotNum);
@@ -319,14 +343,14 @@ export const FinalInvoicesView: React.FC<FinalInvoicesViewProps> = ({
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Final Invoices"
-        description="Generate official manufacturing settlement invoices once lot finished products are fully accounted for."
+        title="FINAL TAX INVOICES & BILLING LEDGER"
+        description="Generate official GST manufacturing settlement invoices for finished lot goods and record payment collections."
         primaryAction={{
-          label: "Generate Final Invoice",
+          label: "Generate Final Invoice (F2)",
           onClick: handleOpenNew,
-          icon: <Plus className="w-4 h-4" />
+          icon: <Plus className="w-3.5 h-3.5" />
         }}
       />
 

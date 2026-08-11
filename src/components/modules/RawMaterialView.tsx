@@ -6,6 +6,7 @@ import { PageHeader } from '../common/PageHeader';
 import { DataTable, Column } from '../common/DataTable';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField } from '../common/FormControls';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface RawMaterialViewProps {
   showToast: (msg: string) => void;
@@ -20,6 +21,17 @@ export const RawMaterialView: React.FC<RawMaterialViewProps> = ({ showToast, onV
   const [selectedRm, setSelectedRm] = useState<RawMaterial | null>(null);
   const [viewRecordRm, setViewRecordRm] = useState<RawMaterial | null>(null);
   const [damageModalOpen, setDamageModalOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      if (onNavigateToCutting) onNavigateToCutting();
+    },
+    onClose: () => {
+      setDamageModalOpen(false);
+      setViewRecordRm(null);
+      setSelectedRm(null);
+    }
+  });
 
   const [damageData, setDamageData] = useState({
     damageQuantity: '',
@@ -142,14 +154,14 @@ export const RawMaterialView: React.FC<RawMaterialViewProps> = ({ showToast, onV
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Raw Material Inventory"
-        description="Track purchased cloth rolls, available material balance for cutting, and damage logs."
+        title="RAW MATERIAL & FABRIC ROLLS STOCK"
+        description="Track purchased cloth rolls, available material balance for cutting masters, and damage logs."
         primaryAction={onNavigateToCutting ? {
-          label: "Go to Cutting Section",
+          label: "Issue to Cutting Section (F2)",
           onClick: onNavigateToCutting,
-          icon: <ArrowUpRight className="w-4 h-4" />
+          icon: <ArrowUpRight className="w-3.5 h-3.5" />
         } : undefined}
       />
 

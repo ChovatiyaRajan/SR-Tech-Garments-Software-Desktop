@@ -9,6 +9,7 @@ import { Modal } from '../common/Modal';
 import { FormSection, InputField, SelectField } from '../common/FormControls';
 import { QuickAddModal } from '../common/QuickAddModal';
 import { StatusBadge } from '../common/StatusBadge';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface FinishedProductsViewProps {
   showToast: (msg: string) => void;
@@ -37,6 +38,30 @@ export const FinishedProductsView: React.FC<FinishedProductsViewProps> = ({
   const [assignDrawerOpen, setAssignDrawerOpen] = useState(false);
   const [damageModalOpen, setDamageModalOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      const availableFps = finishedProducts.filter(f => f.unassignedFinishedQty > 0);
+      if (availableFps.length > 0) {
+        setSelectedEmployeeId(employees.length > 0 ? employees[0].id : '');
+        setAssignmentDate(new Date().toISOString().split('T')[0]);
+        setDispatchNotes('Bulk dispatch to sales staff');
+        setDispatchItems([
+          { id: `row_${Date.now()}_1`, finishedProductId: availableFps[0].id, assignedFinishedQty: String(availableFps[0].unassignedFinishedQty) }
+        ]);
+        setAssignDrawerOpen(true);
+      } else {
+        showToast('No unassigned finished products available for staff dispatch.');
+      }
+    },
+    onClose: () => {
+      setAssignDrawerOpen(false);
+      setDamageModalOpen(false);
+      setQuickAddOpen(false);
+      setViewRecordFp(null);
+      setViewRecordEa(null);
+    }
+  });
 
   // Multi-item dispatch state
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
@@ -417,20 +442,15 @@ export const FinishedProductsView: React.FC<FinishedProductsViewProps> = ({
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <PageHeader
-        title="Finished Products & Employee Dispatch"
-        description="Track finished items by tailor source, and dispatch specific items (e.g. 50 Pants & 20 Shirts) to staff members dynamically."
-        action={
-          <button
-            type="button"
-            onClick={handleOpenGeneralAssign}
-            className="px-3.5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
-          >
-            <Send className="w-3.5 h-3.5" />
-            New Dispatch to Staff
-          </button>
-        }
+        title="FINISHED GOODS STOCK & STAFF DISPATCH"
+        description="Track finished garments by tailor source, quality inspection, and dispatch items to sales staff."
+        primaryAction={{
+          label: "Dispatch to Staff (F2)",
+          onClick: handleOpenGeneralAssign,
+          icon: <Send className="w-3.5 h-3.5" />
+        }}
       />
 
       {/* 1. Finished Goods Stock Inventory Table */}

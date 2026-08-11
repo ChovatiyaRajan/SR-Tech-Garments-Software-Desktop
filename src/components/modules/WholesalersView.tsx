@@ -7,6 +7,7 @@ import { DataTable, Column } from '../common/DataTable';
 import { Drawer } from '../common/Drawer';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField } from '../common/FormControls';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface WholesalersViewProps {
   showToast: (msg: string) => void;
@@ -17,6 +18,18 @@ export const WholesalersView: React.FC<WholesalersViewProps> = ({ showToast, onV
   const [wholesalers, setWholesalers] = useState<Wholesaler[]>(erpService.getWholesalers());
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedWholesaler, setSelectedWholesaler] = useState<Wholesaler | null>(null);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      setFormData({ name: '', phone: '', address: '', gstNumber: '' });
+      setError('');
+      setIsDrawerOpen(true);
+    },
+    onClose: () => {
+      setIsDrawerOpen(false);
+      setSelectedWholesaler(null);
+    }
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -104,14 +117,14 @@ export const WholesalersView: React.FC<WholesalersViewProps> = ({ showToast, onV
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Wholesalers Master"
-        description="Directory of fabric suppliers and wholesale material partners."
+        title="WHOLESALERS MASTER DIRECTORY"
+        description="Directory of fabric suppliers, textile mills, and wholesale material partners."
         primaryAction={{
-          label: "Add Wholesaler",
+          label: "Add Wholesaler (F2)",
           onClick: handleOpenAdd,
-          icon: <Plus className="w-4 h-4" />
+          icon: <Plus className="w-3.5 h-3.5" />
         }}
       />
 

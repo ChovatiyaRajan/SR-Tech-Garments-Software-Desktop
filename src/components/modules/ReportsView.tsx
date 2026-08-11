@@ -2,9 +2,16 @@ import React, { useState } from 'react';
 import { BarChart3, FileSpreadsheet, Printer, Download } from 'lucide-react';
 import { erpService } from '../../services/storage';
 import { PageHeader } from '../common/PageHeader';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 export const ReportsView: React.FC = () => {
   const [reportType, setReportType] = useState<'stock' | 'wholesalers' | 'production' | 'payroll'>('stock');
+
+  useKeyboardShortcuts({
+    onPrint: () => {
+      window.print();
+    }
+  });
 
   const purchases = erpService.getPurchases();
   const rawMaterials = erpService.getRawMaterials();
@@ -18,15 +25,15 @@ export const ReportsView: React.FC = () => {
   const upaadRecords = erpService.getUpaadRecords();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
-        title="Software Reports & Statements"
-        description="Comprehensive accounting, inventory balance, tailor wage, and payroll audit statements."
+        title="STATUTORY REPORTS & FINANCIAL AUDIT STATEMENTS"
+        description="Comprehensive accounting, inventory balance, tailor wage, GST invoicing, and payroll audit statements."
         secondaryActions={[
           {
-            label: "Print Statement",
+            label: "Print Statement (Ctrl+P)",
             onClick: () => window.print(),
-            icon: <Printer className="w-4 h-4" />
+            icon: <Printer className="w-3.5 h-3.5" />
           }
         ]}
       />

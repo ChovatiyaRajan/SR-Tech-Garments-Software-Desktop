@@ -7,6 +7,7 @@ import { DataTable, Column } from '../common/DataTable';
 import { Drawer } from '../common/Drawer';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField, SelectField } from '../common/FormControls';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface CuttingViewProps {
   showToast: (msg: string) => void;
@@ -84,6 +85,23 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
     setError('');
     setIsDrawerOpen(true);
   };
+
+  useKeyboardShortcuts({
+    onNew: handleOpenNew,
+    onAddRow: () => {
+      if (isDrawerOpen) {
+        const nextId = `row_${Date.now()}`;
+        setSizeRows(prev => [
+          ...prev,
+          { id: nextId, sizeName: PRODUCT_SUGGESTIONS[prev.length % PRODUCT_SUGGESTIONS.length], perPieceLength: '2.5', meterUsed: '100' }
+        ]);
+      }
+    },
+    onClose: () => {
+      setIsDrawerOpen(false);
+      setViewRecord(null);
+    }
+  });
 
   const selectedRm = rawMaterials.find(rm => rm.lotNumber === formData.lotNumber);
   const availableMeters = selectedRm ? selectedRm.availableQuantity : 0;
@@ -248,14 +266,14 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Cutting Operations"
-        description="Record cloth cutting details, produced cut pieces count, and waste metrics per Lot."
+        title="CUTTING MASTERS & FABRIC CUTTING ENTRY"
+        description="Record cloth cutting calculations, size-wise piece generation, and waste metrics per Lot."
         primaryAction={{
-          label: "Start Cutting",
+          label: "New Cutting Entry (F2)",
           onClick: handleOpenNew,
-          icon: <Plus className="w-4 h-4" />
+          icon: <Plus className="w-3.5 h-3.5" />
         }}
       />
 

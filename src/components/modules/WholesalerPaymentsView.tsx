@@ -7,6 +7,7 @@ import { DataTable, Column } from '../common/DataTable';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField, SelectField } from '../common/FormControls';
 import { StatusBadge } from '../common/StatusBadge';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface WholesalerPaymentsViewProps {
   showToast: (msg: string) => void;
@@ -23,6 +24,27 @@ export const WholesalerPaymentsView: React.FC<WholesalerPaymentsViewProps> = ({
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [viewRecord, setViewRecord] = useState<WholesalerPayment | null>(null);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      const target = pendingInvoices.length > 0 ? pendingInvoices[0] : null;
+      setSelectedInvoice(target);
+      setFormData({
+        invoiceId: target ? target.id : '',
+        amountPaid: target ? String(target.dueAmount) : '50000',
+        paymentDate: new Date().toISOString().split('T')[0],
+        paymentMethod: 'BANK_TRANSFER',
+        referenceNumber: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
+        notes: 'Payment received against tax invoice'
+      });
+      setError('');
+      setPaymentModalOpen(true);
+    },
+    onClose: () => {
+      setPaymentModalOpen(false);
+      setViewRecord(null);
+    }
+  });
 
   const pendingInvoices = invoices.filter(i => i.paymentStatus !== 'PAID');
 
@@ -139,14 +161,14 @@ export const WholesalerPaymentsView: React.FC<WholesalerPaymentsViewProps> = ({
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Wholesaler Payments & Settlements"
-        description="Record payment transactions for final invoices and complete the lot manufacturing settlement flow."
+        title="WHOLESALER PAYMENTS & SETTLEMENTS LEDGER"
+        description="Record payment vouchers, bank transfers, and complete supplier lot settlements."
         primaryAction={{
-          label: "Record Payment",
+          label: "Record Supplier Payment (F2)",
           onClick: () => handleOpenNew(),
-          icon: <Plus className="w-4 h-4" />
+          icon: <Plus className="w-3.5 h-3.5" />
         }}
       />
 

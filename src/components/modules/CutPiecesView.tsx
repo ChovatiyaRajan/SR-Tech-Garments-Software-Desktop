@@ -8,6 +8,7 @@ import { Drawer } from '../common/Drawer';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField, SelectField } from '../common/FormControls';
 import { QuickAddModal } from '../common/QuickAddModal';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface CutPiecesViewProps {
   showToast: (msg: string) => void;
@@ -23,6 +24,30 @@ export const CutPiecesView: React.FC<CutPiecesViewProps> = ({ showToast, onViewL
   const [viewRecord, setViewRecord] = useState<CutPieces | null>(null);
   const [assignDrawerOpen, setAssignDrawerOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      const avail = cutPiecesList.find(c => c.unassignedPieces > 0) || (cutPiecesList.length > 0 ? cutPiecesList[0] : null);
+      if (avail) {
+        setSelectedCp(avail);
+        setAssignData({
+          tailorId: tailors.length > 0 ? tailors[0].id : '',
+          quantityAssigned: String(avail.unassignedPieces || 50),
+          ratePerPiece: '45',
+          issueDate: new Date().toISOString().split('T')[0],
+          targetCompletionDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+          notes: ''
+        });
+        setAssignDrawerOpen(true);
+      }
+    },
+    onClose: () => {
+      setAssignDrawerOpen(false);
+      setQuickAddOpen(false);
+      setTrackModalOpen(false);
+      setViewRecord(null);
+    }
+  });
 
   // Tracking Progress Modal State
   const [trackModalOpen, setTrackModalOpen] = useState(false);
@@ -296,10 +321,10 @@ export const CutPiecesView: React.FC<CutPiecesViewProps> = ({ showToast, onViewL
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Cut Pieces Inventory & Tailor Assignment"
-        description="Track active cutting process by Cutting Masters, log incremental piece handovers, and assign ready cut pieces to tailors for stitching."
+        title="CUT PIECES STOCK & TAILOR ISSUE CONTROL"
+        description="Track active cutting process by Cutting Masters, log incremental piece handovers, and allocate ready cut pieces to tailors for stitching."
       />
 
       <DataTable

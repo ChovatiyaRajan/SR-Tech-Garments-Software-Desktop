@@ -27,6 +27,7 @@ import { StatusBadge } from '../common/StatusBadge';
 import { ProcessTracker, getActiveModuleForStatus } from '../common/ProcessTracker';
 import { printLotSummaryHtml } from '../../utils/printHelper';
 import { NavModule } from '../common/ERPLayout';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface AllLotsViewProps {
   showToast: (msg: string) => void;
@@ -40,6 +41,17 @@ export const AllLotsView: React.FC<AllLotsViewProps> = ({
   onNavigate
 }) => {
   const [lifecycles] = useState<LotLifecycle[]>(erpService.getAllLotLifecycles());
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      onNavigate('purchases');
+    },
+    onPrint: () => {
+      if (lifecycles.length > 0) {
+        printLotSummaryHtml(lifecycles[0]);
+      }
+    }
+  });
   const [activeTab, setActiveTab] = useState<'all' | 'ongoing' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedWholesaler, setSelectedWholesaler] = useState<string>('ALL');
@@ -155,22 +167,15 @@ export const AllLotsView: React.FC<AllLotsViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
-        title="Lots Directory & Manufacturing Progress"
-        description="Comprehensive dashboard of all ongoing and completed manufacturing lots. Includes complete lifecycle narratives, item breakdowns, tailor assignments, and invoice status."
-        action={
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onNavigate('purchases')}
-              className="px-3.5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              New Purchase Lot
-            </button>
-          </div>
-        }
+        title="LOTS MASTER DIRECTORY & STAGE METRICS"
+        description="Comprehensive directory of all ongoing and completed manufacturing lots, stage metrics, tailor assignments, and billing status."
+        primaryAction={{
+          label: "New Purchase Lot (F2)",
+          onClick: () => onNavigate('purchases'),
+          icon: <Plus className="w-3.5 h-3.5" />
+        }}
       />
 
       {/* Top Executive KPI Overview Bar */}

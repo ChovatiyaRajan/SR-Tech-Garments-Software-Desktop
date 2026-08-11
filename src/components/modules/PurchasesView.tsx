@@ -8,6 +8,7 @@ import { Drawer } from '../common/Drawer';
 import { Modal } from '../common/Modal';
 import { FormSection, InputField, SelectField } from '../common/FormControls';
 import { QuickAddModal } from '../common/QuickAddModal';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface PurchasesViewProps {
   showToast: (msg: string) => void;
@@ -22,6 +23,31 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({ showToast, onViewL
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<Purchase | null>(null);
+
+  useKeyboardShortcuts({
+    onNew: () => {
+      const nextLotNum = `LOT-2026-${100 + purchases.length + 1}`;
+      setFormData({
+        wholesalerId: wholesalers.length > 0 ? wholesalers[0].id : '',
+        purchaseDate: new Date().toISOString().split('T')[0],
+        challanNumber: `CH-${Math.floor(1000 + Math.random() * 9000)}`,
+        lotNumber: nextLotNum,
+        materialName: '100% Cotton Print Fabric',
+        unit: 'meters',
+        totalQuantity: '500',
+        ratePerUnit: '100',
+        purchaseAmount: '50000',
+        notes: ''
+      });
+      setError('');
+      setIsDrawerOpen(true);
+    },
+    onClose: () => {
+      setIsDrawerOpen(false);
+      setQuickAddOpen(false);
+      setViewRecord(null);
+    }
+  });
 
   const [formData, setFormData] = useState({
     wholesalerId: '',
@@ -187,14 +213,14 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({ showToast, onViewL
   ];
 
   return (
-    <div>
+    <div className="space-y-3">
       <PageHeader
-        title="Fabric Purchases"
-        description="Record incoming material challans and automatically generate Lot tracking records."
+        title="FABRIC PURCHASES & CHALLANS MASTER"
+        description="Record incoming material challans, supplier invoices, and generate lot tracking records."
         primaryAction={{
-          label: "Create Purchase",
+          label: "Record Fabric Purchase (F2)",
           onClick: handleOpenNew,
-          icon: <Plus className="w-4 h-4" />
+          icon: <Plus className="w-3.5 h-3.5" />
         }}
       />
 
