@@ -114,7 +114,31 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
     return sum + (len > 0 ? Math.floor(m / len) : 0);
   }, 0);
 
+  // Calculate net cloth consumed directly in cut pieces
+  const totalNetClothInPieces = sizeRows.reduce((sum, r) => {
+    const m = parseFloat(r.meterUsed) || 0;
+    const len = parseFloat(r.perPieceLength) || 0;
+    const pcs = len > 0 ? Math.floor(m / len) : 0;
+    return sum + (pcs * len);
+  }, 0);
+
+  // Waste Material = Extra remained cloth that remains after piece is cutted
+  const totalCalculatedWasteMeters = Math.max(
+    0,
+    Math.round((totalUsedMeters - totalNetClothInPieces) * 100) / 100
+  );
+
   const remainingMeters = availableMeters - totalUsedMeters;
+
+  // Auto-sync calculated waste meters when drawer is open and calculation updates
+  React.useEffect(() => {
+    if (isDrawerOpen) {
+      setFormData(prev => ({
+        ...prev,
+        wasteMeters: String(totalCalculatedWasteMeters)
+      }));
+    }
+  }, [totalCalculatedWasteMeters, isDrawerOpen]);
 
   const updateSizeRow = (id: string, field: keyof SizeRow, value: string) => {
     setSizeRows(prevRows =>
@@ -236,7 +260,7 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
     },
     {
       key: 'materialUsedMeters',
-      header: 'Cloth Used',
+      header: 'Allocated Cloth',
       align: 'right',
       accessor: (c) => <span className="font-mono text-slate-800">{c.materialUsedMeters} meters</span>
     },
@@ -248,9 +272,13 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
     },
     {
       key: 'wasteMeters',
-      header: 'Waste',
+      header: 'Waste Material',
       align: 'right',
-      accessor: (c) => <span className="font-mono text-slate-500">{c.wasteMeters} meters</span>
+      accessor: (c) => (
+        <span className="font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+          {c.wasteMeters} meters
+        </span>
+      )
     },
     {
       key: 'cuttingMasterName',
@@ -332,18 +360,24 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
               <div className="bg-slate-100 p-2.5 rounded border border-slate-200">
-                <span className="text-[11px] text-slate-500 font-semibold block">Cloth Consumed</span>
+                <span className="text-[11px] text-slate-500 font-semibold block">Allocated Cloth</span>
                 <span className="font-mono font-bold text-slate-800 text-sm">{viewRecord.materialUsedMeters} meters</span>
+              </div>
+              <div className="bg-indigo-50 p-2.5 rounded border border-indigo-200">
+                <span className="text-[11px] text-indigo-800 font-semibold block">Cloth in Pieces</span>
+                <span className="font-mono font-bold text-indigo-900 text-sm">
+                  {Math.max(0, Math.round((viewRecord.materialUsedMeters - viewRecord.wasteMeters) * 100) / 100)} meters
+                </span>
+              </div>
+              <div className="bg-amber-50 p-2.5 rounded border border-amber-200">
+                <span className="text-[11px] text-amber-800 font-semibold block">Waste Material (Remained)</span>
+                <span className="font-mono font-bold text-amber-900 text-sm">{viewRecord.wasteMeters} meters</span>
               </div>
               <div className="bg-emerald-50 p-2.5 rounded border border-emerald-200">
                 <span className="text-[11px] text-emerald-800 font-semibold block">Cut Pieces Output</span>
                 <span className="font-mono font-bold text-emerald-700 text-sm">{viewRecord.totalCutPiecesProduced} pcs</span>
-              </div>
-              <div className="bg-slate-100 p-2.5 rounded border border-slate-200">
-                <span className="text-[11px] text-slate-500 font-semibold block">Waste Material</span>
-                <span className="font-mono font-bold text-slate-600 text-sm">{viewRecord.wasteMeters} meters</span>
               </div>
             </div>
 
@@ -452,14 +486,16 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
           <FormSection title="Cutting Output & Material Usage">
             <div className="col-span-2 space-y-3">
               <p className="text-[11px] text-slate-600 font-medium bg-indigo-50/70 p-2.5 rounded-lg border border-indigo-100/80">
-                💡 <strong>Target Product Tracking:</strong> Specify the final product item (e.g. <em>T-shirt</em>, <em>Pant</em>, <em>Men Formal Shirt</em>) that this cut piece will become. This product name will be tracked through stitching, finished goods inventory, staff dispatches, and sales invoices.
+                💡 <strong>Target Product Tracking & Waste Calculation:</strong> Specify the target product item (e.g. <em>T-shirt</em>, <em>Pant</em>, <em>Men Formal Shirt</em>). Extra remained cloth that remains after pieces are cut is automatically calculated as waste: <strong>Meter Used - (Pieces Produced × Per Piece Length)</strong>.
               </p>
 
               {/* Stock Meter Summary Bar */}
-              <div className="flex flex-wrap items-center justify-between text-xs bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-slate-700">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-slate-700">
                 <div>Total Available: <strong className="font-mono text-slate-900">{availableMeters}m</strong></div>
-                <div>Total Used: <strong className="font-mono text-slate-900">{totalUsedMeters}m</strong></div>
-                <div>Remaining: <strong className={`font-mono ${remainingMeters < 0 ? 'text-red-600 font-bold' : 'text-emerald-700 font-semibold'}`}>{remainingMeters}m</strong></div>
+                <div>Allocated: <strong className="font-mono text-slate-900">{totalUsedMeters}m</strong></div>
+                <div>In Cut Pieces: <strong className="font-mono text-indigo-700 font-semibold">{totalNetClothInPieces.toFixed(2)}m</strong></div>
+                <div>Remained Waste: <strong className="font-mono text-amber-700 font-bold">{totalCalculatedWasteMeters}m</strong></div>
+                <div>Remaining Uncut: <strong className={`font-mono ${remainingMeters < 0 ? 'text-red-600 font-bold' : 'text-emerald-700 font-semibold'}`}>{remainingMeters}m</strong></div>
               </div>
 
               {/* Suggestions Datalist */}
@@ -475,6 +511,8 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
                   const meterVal = parseFloat(row.meterUsed) || 0;
                   const perPieceLenVal = parseFloat(row.perPieceLength) || 0;
                   const pcsGenerated = perPieceLenVal > 0 ? Math.floor(meterVal / perPieceLenVal) : 0;
+                  const netClothUsedInPieces = pcsGenerated * perPieceLenVal;
+                  const rowWasteMeters = Math.max(0, Math.round((meterVal - netClothUsedInPieces) * 100) / 100);
 
                   const otherRowsUsed = sizeRows
                     .filter(r => r.id !== row.id)
@@ -547,11 +585,21 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-200/80 text-xs">
-                        <span className="text-slate-600 font-medium">Pieces Output:</span>
-                        <span className="font-mono font-bold text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded border border-emerald-200">
-                          {pcsGenerated} pcs
-                        </span>
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 text-xs">
+                        <div>
+                          <span className="text-slate-500 text-[10px] block">In Pieces</span>
+                          <span className="font-mono text-slate-800 font-medium">{netClothUsedInPieces.toFixed(2)}m</span>
+                        </div>
+                        <div>
+                          <span className="text-amber-800 text-[10px] block font-semibold">Remained Waste</span>
+                          <span className="font-mono font-bold text-amber-700">{rowWasteMeters}m</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-slate-500 text-[10px] block">Pieces Output</span>
+                          <span className="font-mono font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                            {pcsGenerated} pcs
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );
@@ -570,13 +618,15 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
 
               {/* Desktop View: Table Layout (hidden sm:block) */}
               <div className="hidden sm:block border border-slate-200 rounded-lg overflow-x-auto shadow-2xs bg-white">
-                <table className="w-full min-w-[620px] text-left text-xs border-collapse">
+                <table className="w-full min-w-[730px] text-left text-xs border-collapse">
                   <thead className="bg-slate-100 text-slate-800 font-bold border-b border-slate-200">
                     <tr>
-                      <th className="py-2.5 px-3.5 min-w-[260px]">Final Product Name / Item</th>
-                      <th className="py-2.5 px-3 w-32">Per Piece Length</th>
-                      <th className="py-2.5 px-3 w-36">Meter Used</th>
-                      <th className="py-2.5 px-3.5 w-32 text-right">Pieces Generated</th>
+                      <th className="py-2.5 px-3 min-w-[180px]">Final Product Name / Item</th>
+                      <th className="py-2.5 px-2.5 w-36">Per Piece Length</th>
+                      <th className="py-2.5 px-2.5 w-32">Meter Used</th>
+                      <th className="py-2.5 px-3 w-32 text-right">Pieces Output</th>
+                      <th className="py-2.5 px-2.5 w-28 text-right">Net Cloth in Pcs</th>
+                      <th className="py-2.5 px-2.5 w-28 text-right">Remained Waste</th>
                       <th className="py-2.5 px-2 w-10 text-center"></th>
                     </tr>
                   </thead>
@@ -585,6 +635,8 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
                       const meterVal = parseFloat(row.meterUsed) || 0;
                       const perPieceLenVal = parseFloat(row.perPieceLength) || 0;
                       const pcsGenerated = perPieceLenVal > 0 ? Math.floor(meterVal / perPieceLenVal) : 0;
+                      const netClothUsedInPieces = pcsGenerated * perPieceLenVal;
+                      const rowWasteMeters = Math.max(0, Math.round((meterVal - netClothUsedInPieces) * 100) / 100);
 
                       const otherRowsUsed = sizeRows
                         .filter(r => r.id !== row.id)
@@ -600,10 +652,10 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
                               value={row.sizeName}
                               onChange={(e) => updateSizeRow(row.id, 'sizeName', e.target.value)}
                               placeholder="e.g. T-shirt, Pant, Men Formal Shirt"
-                              className="w-full border border-slate-300 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-400 placeholder:font-normal"
+                              className="w-full border border-slate-300 rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-400 placeholder:font-normal"
                             />
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="py-2 px-2.5">
                             <div className="relative">
                               <input
                                 type="number"
@@ -618,7 +670,7 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
                               <span className="absolute right-2 top-1.5 text-slate-400 text-2xs font-semibold">m</span>
                             </div>
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="py-2 px-2.5">
                             <div className="relative">
                               <input
                                 type="number"
@@ -634,10 +686,16 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
                               <span className="absolute right-2 top-1.5 text-slate-400 text-2xs font-semibold">m</span>
                             </div>
                           </td>
-                          <td className="py-2 px-3.5 text-right font-mono font-bold text-slate-900">
-                            <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-md inline-block">
+                          <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
+                            <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md inline-block">
                               {pcsGenerated} pcs
                             </span>
+                          </td>
+                          <td className="py-2 px-2.5 text-right font-mono text-slate-700">
+                            {netClothUsedInPieces.toFixed(2)} m
+                          </td>
+                          <td className="py-2 px-2.5 text-right font-mono font-bold text-amber-700">
+                            {rowWasteMeters} m
                           </td>
                           <td className="py-2 px-2 text-center">
                             {sizeRows.length > 1 && (
@@ -668,10 +726,12 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
                           Add Target Product
                         </button>
                       </td>
-                      <td className="py-2.5 px-3 text-right font-semibold text-slate-600">Total Pieces Generated:</td>
-                      <td className="py-2.5 px-3.5 text-right font-mono font-bold text-slate-900 text-sm">
+                      <td className="py-2.5 px-2.5 font-mono font-bold text-slate-900">{totalUsedMeters} m</td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-800 text-sm">
                         {totalPiecesGenerated} pcs
                       </td>
+                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-700">{totalNetClothInPieces.toFixed(2)} m</td>
+                      <td className="py-2.5 px-2.5 text-right font-mono font-bold text-amber-700">{totalCalculatedWasteMeters} m</td>
                       <td></td>
                     </tr>
                   </tfoot>
@@ -679,13 +739,30 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
               </div>
             </div>
 
-            <InputField
-              label="Waste Material"
-              type="number"
-              unit="meters"
-              value={formData.wasteMeters}
-              onChange={(e) => setFormData({ ...formData, wasteMeters: e.target.value })}
-            />
+            <div className="col-span-2 space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  Waste Material / Leftover Cloth (meters)
+                  <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded">
+                    🔒 Auto-Calculated
+                  </span>
+                </label>
+              </div>
+              <div className="relative">
+                <input
+                  type="number"
+                  disabled
+                  readOnly
+                  value={totalCalculatedWasteMeters}
+                  className="w-full border border-slate-200 bg-slate-100 rounded-md px-3 py-2 pr-16 text-xs font-mono font-bold text-slate-800 cursor-not-allowed select-none"
+                  placeholder="0"
+                />
+                <span className="absolute right-3 top-2 text-slate-400 text-xs font-semibold">meters</span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                System calculated leftover cloth remaining after pieces are cutted: <strong className="font-mono text-slate-800">{totalCalculatedWasteMeters} meters</strong> (Allocated - Net Pieces Cloth).
+              </p>
+            </div>
 
             <InputField
               label="Notes"

@@ -564,18 +564,26 @@ export const printLotSummaryHtml = (lifecycle: any) => {
           <div class="section-title">1. Cutting & Generated Pieces</div>
           <table>
             <thead>
-              <tr><th>Target Garment Item</th><th class="text-right">Meters Used</th><th class="text-right">Pieces Generated</th></tr>
+              <tr><th>Target Garment Item</th><th class="text-right">Meters Used</th><th class="text-right">Waste Material</th><th class="text-right">Pieces Generated</th></tr>
             </thead>
             <tbody>
               ${cutPieces && cutPieces.sizeBreakdown && cutPieces.sizeBreakdown.length > 0
-                ? cutPieces.sizeBreakdown.map((sb: any) => `
-                    <tr>
-                      <td><strong>${sb.sizeName}</strong></td>
-                      <td class="text-right font-mono">${sb.meterUsed} m</td>
-                      <td class="text-right font-mono">${sb.piecesGenerated} pcs</td>
-                    </tr>
-                  `).join('')
-                : `<tr><td colspan="3" style="color: #64748b;">Total Cut Pieces Generated: <strong>${cutPieces ? cutPieces.totalPiecesGenerated : 0} pcs</strong></td></tr>`
+                ? cutPieces.sizeBreakdown.map((sb: any) => {
+                    const m = parseFloat(sb.meterUsed) || 0;
+                    const len = parseFloat(sb.perPieceLength) || 0;
+                    const pcs = sb.piecesGenerated || (len > 0 ? Math.floor(m / len) : 0);
+                    const netCloth = pcs * len;
+                    const waste = Math.max(0, Math.round((m - netCloth) * 100) / 100);
+                    return `
+                      <tr>
+                        <td><strong>${sb.sizeName}</strong></td>
+                        <td class="text-right font-mono">${sb.meterUsed} m</td>
+                        <td class="text-right font-mono" style="color: #b45309;">${waste} m</td>
+                        <td class="text-right font-mono">${pcs} pcs</td>
+                      </tr>
+                    `;
+                  }).join('')
+                : `<tr><td colspan="4" style="color: #64748b;">Total Cut Pieces Generated: <strong>${cutPieces ? cutPieces.totalPiecesGenerated : 0} pcs</strong></td></tr>`
               }
             </tbody>
           </table>

@@ -221,14 +221,15 @@ export const LotDetailView: React.FC<LotDetailViewProps> = ({ lotNumber, onBack,
 
           <div className="space-y-3 text-xs">
             {cuttings.map(c => (
-              <div key={c.id} className="bg-slate-50 p-2.5 rounded border border-slate-200">
+              <div key={c.id} className="bg-slate-50 p-2.5 rounded border border-slate-200 space-y-1">
                 <div className="flex justify-between font-medium">
                   <span>Pattern: <strong>{c.pieceType}</strong></span>
                   <span className="font-mono text-slate-500">{c.cuttingDate}</span>
                 </div>
-                <div className="mt-1 flex justify-between text-[11px] text-slate-600">
-                  <span>Cloth used: {c.materialUsedMeters} meters</span>
-                  <span>Master: {c.cuttingMasterName || 'Standard'}</span>
+                <div className="grid grid-cols-3 gap-1 pt-1 border-t border-slate-200/80 text-[11px] text-slate-700">
+                  <span>Cloth: <strong className="font-mono">{c.materialUsedMeters}m</strong></span>
+                  <span>Waste Material: <strong className="font-mono text-amber-700 font-bold">{c.wasteMeters}m</strong></span>
+                  <span className="text-right">Master: <strong className="text-slate-900">{c.cuttingMasterName || 'Cutter'}</strong></span>
                 </div>
               </div>
             ))}
