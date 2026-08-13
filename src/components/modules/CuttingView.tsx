@@ -748,7 +748,7 @@ export const CuttingView: React.FC<CuttingViewProps> = ({ showToast, onViewLot, 
                   </span>
                 </label>
               </div>
-              <div className="relative">
+              <div className="relative">  
                 <input
                   type="number"
                   disabled
